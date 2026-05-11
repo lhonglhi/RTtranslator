@@ -15,7 +15,7 @@
     flex-direction: column;
     padding: 20px;
   }
-  header { text-align: center; margin-bottom: 20px; }
+  header { text-align: center; margin-bottom: 16px; }
   h1 {
     font-size: 26px;
     font-weight: 600;
@@ -33,19 +33,19 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
-  .settings {
+  .row {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
-    padding: 14px;
+    padding: 12px 14px;
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     align-items: center;
   }
-  .settings input, .settings select {
+  .row input, .row select {
     background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 8px;
@@ -55,14 +55,16 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  .settings input:focus, .settings select:focus { border-color: #60a5fa; }
-  .settings input[type="password"] { flex: 1; min-width: 200px; }
+  .row input:focus, .row select:focus { border-color: #60a5fa; }
+  .row input[type="password"] { flex: 1; min-width: 200px; }
+  .row label { font-size: 13px; color: #94a3b8; }
   .status {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     font-size: 13px;
     color: #94a3b8;
+    margin-left: auto;
   }
   .status-dot {
     width: 8px; height: 8px;
@@ -75,7 +77,7 @@
   .status-dot.error { background: #f87171; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  .direction {
+  .toggle-group {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
@@ -83,24 +85,25 @@
     display: flex;
     gap: 4px;
   }
-  .dir-btn {
+  .tg-btn {
     flex: 1;
     background: transparent;
     border: none;
-    padding: 12px 16px;
+    padding: 10px 14px;
     color: #94a3b8;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
   }
-  .dir-btn.active {
+  .tg-btn.active {
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     color: white;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
-  .dir-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .tg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .tg-btn .sub { display: block; font-size: 11px; opacity: 0.7; margin-top: 2px; }
 
   .mic-btn {
     width: 80px; height: 80px;
@@ -160,9 +163,9 @@
   .panels {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 14px;
     flex: 1;
-    min-height: 280px;
+    min-height: 260px;
   }
   @media (max-width: 640px) {
     .panels { grid-template-columns: 1fr; }
@@ -171,28 +174,43 @@
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    min-height: 200px;
+    min-height: 180px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
   }
   .panel-label {
     font-size: 12px;
     color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 10px;
   }
+  .mute-btn {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #94a3b8;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .mute-btn.muted { color: #f87171; border-color: rgba(248, 113, 113, 0.5); }
   .panel-text {
     flex: 1;
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1.6;
     color: #f1f5f9;
     overflow-y: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
-  .panel-text.muted { color: #64748b; font-style: italic; }
+  .panel-text.muted-text { color: #64748b; font-style: italic; }
   .log {
     font-size: 12px;
     color: #64748b;
@@ -215,6 +233,7 @@
     text-align: center;
     margin-top: 4px;
   }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -224,17 +243,10 @@
 </header>
 
 <div class="container">
-  <div class="settings">
+  <div class="row">
     <input type="password" id="apiKey" placeholder="OpenAI API Key (sk-...)" autocomplete="off">
-    <select id="voice" title="译文语音">
+    <select id="voice" title="译文语音" class="hidden">
       <option value="alloy">Alloy</option>
-      <option value="ash">Ash</option>
-      <option value="ballad">Ballad</option>
-      <option value="coral">Coral</option>
-      <option value="echo">Echo</option>
-      <option value="sage">Sage</option>
-      <option value="shimmer">Shimmer</option>
-      <option value="verse" selected>Verse</option>
     </select>
     <div class="status">
       <span class="status-dot" id="statusDot"></span>
@@ -242,9 +254,14 @@
     </div>
   </div>
 
-  <div class="direction" id="directionBox">
-    <button class="dir-btn active" data-target="en">🇨🇳 中 → 英 🇺🇸</button>
-    <button class="dir-btn" data-target="zh">🇺🇸 英 → 中 🇨🇳</button>
+  <div class="toggle-group" id="modeBox">
+    <button class="tg-btn active" data-mode="single">单向<span class="sub">¥0.25/分钟 · 手动切方向</span></button>
+    <button class="tg-btn" data-mode="dual">双向<span class="sub">¥0.50/分钟 · 自动双向</span></button>
+  </div>
+
+  <div class="toggle-group" id="dirBox">
+    <button class="tg-btn active" data-target="en">🇨🇳 中 → 英 🇺🇸</button>
+    <button class="tg-btn" data-target="zh">🇺🇸 英 → 中 🇨🇳</button>
   </div>
 
   <div class="error" id="errorBox"></div>
@@ -254,22 +271,29 @@
     <button class="mic-btn" id="micBtn" disabled>🎤</button>
     <button class="ctrl-btn" id="stopBtn" title="停止" disabled>⏹</button>
   </div>
-  <div class="log" id="log">填入 API Key 后选择方向, 点击麦克风开始</div>
+  <div class="log" id="log">填入 API Key 后选择模式, 点击麦克风开始</div>
 
   <div class="panels">
     <div class="panel">
-      <div class="panel-label">📥 原文 (Source)</div>
-      <div class="panel-text muted" id="sourceText">等待语音输入...</div>
+      <div class="panel-header">
+        <div class="panel-label" id="panel1Label">🇨🇳 中文</div>
+        <button class="mute-btn hidden" id="mute1" data-target="zh">🔊 播放</button>
+      </div>
+      <div class="panel-text muted-text" id="panel1Text">等待...</div>
     </div>
     <div class="panel">
-      <div class="panel-label">📤 译文 (Translation)</div>
-      <div class="panel-text muted" id="targetText">Waiting for translation...</div>
+      <div class="panel-header">
+        <div class="panel-label" id="panel2Label">🇺🇸 English</div>
+        <button class="mute-btn hidden" id="mute2" data-target="en">🔊 播放</button>
+      </div>
+      <div class="panel-text muted-text" id="panel2Text">Waiting...</div>
     </div>
   </div>
-  <div class="hint">提示: API Key 仅存于本地浏览器, 不上传第三方。切换方向需重新连接。</div>
+  <div class="hint">提示: API Key 仅存于本地浏览器。双向模式同时跑 2 个会话, 价格 ×2。</div>
 </div>
 
-<audio id="remoteAudio" autoplay playsinline></audio>
+<audio id="audio_en" autoplay playsinline></audio>
+<audio id="audio_zh" autoplay playsinline></audio>
 
 <script>
 const MODEL = "gpt-realtime-translate";
@@ -284,28 +308,36 @@ const els = {
   stopBtn: document.getElementById('stopBtn'),
   statusDot: document.getElementById('statusDot'),
   statusText: document.getElementById('statusText'),
-  sourceText: document.getElementById('sourceText'),
-  targetText: document.getElementById('targetText'),
   log: document.getElementById('log'),
   errorBox: document.getElementById('errorBox'),
-  remoteAudio: document.getElementById('remoteAudio'),
-  directionBox: document.getElementById('directionBox'),
+  modeBox: document.getElementById('modeBox'),
+  dirBox: document.getElementById('dirBox'),
+  panel1Label: document.getElementById('panel1Label'),
+  panel2Label: document.getElementById('panel2Label'),
+  panel1Text: document.getElementById('panel1Text'),
+  panel2Text: document.getElementById('panel2Text'),
+  mute1: document.getElementById('mute1'),
+  mute2: document.getElementById('mute2'),
+  audio_en: document.getElementById('audio_en'),
+  audio_zh: document.getElementById('audio_zh'),
 };
 
-let pc = null;
-let dc = null;
-let localStream = null;
-let isRecording = false;
-let isPaused = false;
-let targetLang = localStorage.getItem('target_lang') || 'en';
-let currentSourceItem = null;
-let currentTargetItem = null;
+const STATE = {
+  mode: localStorage.getItem('mode') || 'single', // 'single' | 'dual'
+  targetLang: localStorage.getItem('target_lang') || 'en',
+  sessions: [],
+  localStream: null,
+  isRecording: false,
+  isPaused: false,
+  muted: { en: false, zh: false },
+};
 
-// Restore key, voice, direction
-const savedKey = localStorage.getItem('openai_api_key');
-if (savedKey) els.apiKey.value = savedKey;
+// Restore UI
+els.apiKey.value = localStorage.getItem('openai_api_key') || '';
 els.voice.value = localStorage.getItem('voice') || 'verse';
-setDirectionUI(targetLang);
+applyMode(STATE.mode);
+applyDirection(STATE.targetLang);
+updateMicBtn();
 
 els.apiKey.addEventListener('input', () => {
   localStorage.setItem('openai_api_key', els.apiKey.value.trim());
@@ -315,42 +347,84 @@ els.voice.addEventListener('change', () => {
   localStorage.setItem('voice', els.voice.value);
 });
 
-els.directionBox.querySelectorAll('.dir-btn').forEach(btn => {
+els.modeBox.querySelectorAll('.tg-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    if (isRecording) {
-      showError('录音中无法切换方向, 请先停止');
-      return;
-    }
-    targetLang = btn.dataset.target;
-    localStorage.setItem('target_lang', targetLang);
-    setDirectionUI(targetLang);
+    if (STATE.isRecording) return showError('录音中无法切模式, 请先停止');
+    STATE.mode = btn.dataset.mode;
+    localStorage.setItem('mode', STATE.mode);
+    applyMode(STATE.mode);
   });
 });
 
-function setDirectionUI(target) {
-  els.directionBox.querySelectorAll('.dir-btn').forEach(b => {
+els.dirBox.querySelectorAll('.tg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (STATE.isRecording) return showError('录音中无法切方向, 请先停止');
+    STATE.targetLang = btn.dataset.target;
+    localStorage.setItem('target_lang', STATE.targetLang);
+    applyDirection(STATE.targetLang);
+  });
+});
+
+els.mute1.addEventListener('click', () => toggleMute('zh', els.mute1));
+els.mute2.addEventListener('click', () => toggleMute('en', els.mute2));
+
+function toggleMute(lang, btn) {
+  STATE.muted[lang] = !STATE.muted[lang];
+  const audio = lang === 'en' ? els.audio_en : els.audio_zh;
+  audio.muted = STATE.muted[lang];
+  btn.textContent = STATE.muted[lang] ? '🔇 静音' : '🔊 播放';
+  btn.classList.toggle('muted', STATE.muted[lang]);
+}
+
+function applyMode(mode) {
+  els.modeBox.querySelectorAll('.tg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  if (mode === 'single') {
+    els.dirBox.classList.remove('hidden');
+    els.mute1.classList.add('hidden');
+    els.mute2.classList.add('hidden');
+    applyDirection(STATE.targetLang);
+  } else {
+    els.dirBox.classList.add('hidden');
+    els.mute1.classList.remove('hidden');
+    els.mute2.classList.remove('hidden');
+    els.panel1Label.textContent = '🇨🇳 中文';
+    els.panel2Label.textContent = '🇺🇸 English';
+    els.panel1Text.textContent = '等待...';
+    els.panel2Text.textContent = 'Waiting...';
+  }
+}
+
+function applyDirection(target) {
+  els.dirBox.querySelectorAll('.tg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.target === target);
   });
+  if (STATE.mode !== 'single') return;
   if (target === 'en') {
-    els.sourceText.textContent = '等待中文语音输入...';
-    els.targetText.textContent = 'Waiting for English translation...';
+    els.panel1Label.textContent = '📥 原文 (中文)';
+    els.panel2Label.textContent = '📤 译文 (English)';
+    els.panel1Text.textContent = '等待中文语音输入...';
+    els.panel2Text.textContent = 'Waiting for English translation...';
   } else {
-    els.sourceText.textContent = 'Waiting for English speech...';
-    els.targetText.textContent = '等待中文译文...';
+    els.panel1Label.textContent = '📤 译文 (中文)';
+    els.panel2Label.textContent = '📥 原文 (English)';
+    els.panel1Text.textContent = '等待中文译文...';
+    els.panel2Text.textContent = 'Waiting for English speech...';
   }
 }
 
 function updateMicBtn() {
   els.micBtn.disabled = !els.apiKey.value.trim();
 }
-updateMicBtn();
 
 function updateControls() {
-  els.pauseBtn.disabled = !isRecording;
-  els.stopBtn.disabled = !isRecording;
-  els.pauseBtn.textContent = isPaused ? '▶' : '⏸';
-  els.pauseBtn.title = isPaused ? '恢复' : '暂停';
-  els.directionBox.querySelectorAll('.dir-btn').forEach(b => b.disabled = isRecording);
+  els.pauseBtn.disabled = !STATE.isRecording;
+  els.stopBtn.disabled = !STATE.isRecording;
+  els.pauseBtn.textContent = STATE.isPaused ? '▶' : '⏸';
+  els.pauseBtn.title = STATE.isPaused ? '恢复' : '暂停';
+  els.modeBox.querySelectorAll('.tg-btn').forEach(b => b.disabled = STATE.isRecording);
+  els.dirBox.querySelectorAll('.tg-btn').forEach(b => b.disabled = STATE.isRecording);
 }
 
 function setStatus(state, text) {
@@ -367,22 +441,19 @@ function showError(msg) {
 function logLine(msg) { els.log.textContent = msg; }
 
 els.micBtn.addEventListener('click', async () => {
-  if (isRecording) {
-    togglePause();
-  } else {
-    await start();
-  }
+  if (STATE.isRecording) togglePause();
+  else await start();
 });
 
 els.pauseBtn.addEventListener('click', togglePause);
 els.stopBtn.addEventListener('click', stop);
 
 function togglePause() {
-  if (!isRecording || !localStream) return;
-  isPaused = !isPaused;
-  localStream.getAudioTracks().forEach(t => t.enabled = !isPaused);
+  if (!STATE.isRecording || !STATE.localStream) return;
+  STATE.isPaused = !STATE.isPaused;
+  STATE.localStream.getAudioTracks().forEach(t => t.enabled = !STATE.isPaused);
 
-  if (isPaused) {
+  if (STATE.isPaused) {
     els.micBtn.classList.remove('recording');
     els.micBtn.classList.add('paused');
     els.micBtn.textContent = '⏸';
@@ -404,45 +475,10 @@ async function start() {
   localStorage.setItem('openai_api_key', key);
 
   try {
-    setStatus('connecting', '获取会话凭证...');
-    logLine('创建翻译会话...');
-
-    // Step 1: get ephemeral client secret
-    const sessionConfig = {
-      session: {
-        model: MODEL,
-        audio: {
-          output: {
-            language: targetLang,
-            voice: els.voice.value,
-          },
-        },
-      },
-    };
-
-    const csResp = await fetch(CLIENT_SECRETS_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(sessionConfig),
-    });
-
-    if (!csResp.ok) {
-      const errText = await csResp.text();
-      throw new Error(`获取凭证失败 (${csResp.status}): ${errText}`);
-    }
-
-    const csData = await csResp.json();
-    const clientSecret = csData.value || csData.client_secret?.value || csData.client_secret;
-    if (!clientSecret) {
-      throw new Error('返回数据中找不到 client_secret');
-    }
-
-    // Step 2: request mic
+    setStatus('connecting', '连接中...');
     logLine('请求麦克风权限...');
-    localStream = await navigator.mediaDevices.getUserMedia({
+
+    STATE.localStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
@@ -450,52 +486,27 @@ async function start() {
       },
     });
 
-    // Step 3: WebRTC
-    logLine('建立 WebRTC 连接...');
-    pc = new RTCPeerConnection();
+    const targets = STATE.mode === 'single' ? [STATE.targetLang] : ['en', 'zh'];
+    logLine(`建立 ${targets.length} 个翻译会话...`);
 
-    pc.ontrack = (e) => {
-      els.remoteAudio.srcObject = e.streams[0];
-    };
-
-    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-
-    dc = pc.createDataChannel('oai-events');
-    dc.addEventListener('open', onDcOpen);
-    dc.addEventListener('message', onDcMessage);
-    dc.addEventListener('close', () => setStatus('', '已断开'));
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    logLine('SDP 握手中...');
-    const sdpResp = await fetch(CALLS_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${clientSecret}`,
-        'Content-Type': 'application/sdp',
-      },
-      body: offer.sdp,
-    });
-
-    if (!sdpResp.ok) {
-      const errText = await sdpResp.text();
-      throw new Error(`SDP 交换失败 (${sdpResp.status}): ${errText}`);
+    STATE.sessions = [];
+    for (const target of targets) {
+      const sess = await createSession(key, target);
+      STATE.sessions.push(sess);
     }
 
-    const answerSdp = await sdpResp.text();
-    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
-
-    isRecording = true;
-    isPaused = false;
+    STATE.isRecording = true;
+    STATE.isPaused = false;
     els.micBtn.classList.add('recording');
     els.micBtn.textContent = '🎤';
     setStatus('connected', '已连接');
-    logLine(targetLang === 'en' ? '说中文 → 出英文' : '说英文 → 出中文');
-    els.sourceText.classList.remove('muted');
-    els.targetText.classList.remove('muted');
-    els.sourceText.textContent = '';
-    els.targetText.textContent = '';
+    logLine(STATE.mode === 'single'
+      ? (STATE.targetLang === 'en' ? '说中文 → 出英文' : '说英文 → 出中文')
+      : '双向模式: 自由说中英文, 自动翻译');
+    els.panel1Text.classList.remove('muted-text');
+    els.panel2Text.classList.remove('muted-text');
+    els.panel1Text.textContent = '';
+    els.panel2Text.textContent = '';
     updateControls();
   } catch (err) {
     console.error(err);
@@ -506,49 +517,124 @@ async function start() {
   }
 }
 
-function onDcOpen() {
-  // Reconfirm session config in case translation API requires it post-handshake
-  const sessionUpdate = {
-    type: 'session.update',
+async function createSession(key, target) {
+  const sessionConfig = {
     session: {
+      model: MODEL,
       audio: {
         output: {
-          language: targetLang,
-          voice: els.voice.value,
+          language: target,
         },
       },
     },
   };
-  try { dc.send(JSON.stringify(sessionUpdate)); } catch {}
+
+  const csResp = await fetch(CLIENT_SECRETS_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(sessionConfig),
+  });
+
+  if (!csResp.ok) {
+    const errText = await csResp.text();
+    throw new Error(`获取凭证失败 (${csResp.status}): ${errText}`);
+  }
+
+  const csData = await csResp.json();
+  const clientSecret = csData.value || csData.client_secret?.value || csData.client_secret;
+  if (!clientSecret) throw new Error('返回数据中找不到 client_secret');
+
+  const pc = new RTCPeerConnection();
+  const audioEl = target === 'en' ? els.audio_en : els.audio_zh;
+
+  pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
+
+  STATE.localStream.getTracks().forEach(t => pc.addTrack(t, STATE.localStream));
+
+  const dc = pc.createDataChannel('oai-events');
+  const sess = { pc, dc, target, audioEl };
+  dc.addEventListener('open', () => onDcOpen(sess));
+  dc.addEventListener('message', (e) => onDcMessage(sess, e));
+  dc.addEventListener('close', () => setStatus('', '已断开'));
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  const sdpResp = await fetch(CALLS_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${clientSecret}`,
+      'Content-Type': 'application/sdp',
+    },
+    body: offer.sdp,
+  });
+
+  if (!sdpResp.ok) {
+    const errText = await sdpResp.text();
+    throw new Error(`SDP 交换失败 (${sdpResp.status}): ${errText}`);
+  }
+
+  const answerSdp = await sdpResp.text();
+  await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+  return sess;
 }
 
-function onDcMessage(e) {
+function onDcOpen(sess) {
+  const sessionUpdate = {
+    type: 'session.update',
+    session: {
+      audio: {
+        output: { language: sess.target },
+      },
+    },
+  };
+  try { sess.dc.send(JSON.stringify(sessionUpdate)); } catch {}
+}
+
+const CJK_RE = /[一-鿿]/;
+function detectLang(text) { return CJK_RE.test(text) ? 'zh' : 'en'; }
+
+// Per-session text accumulators
+const accum = new WeakMap();
+function getAcc(sess) {
+  let a = accum.get(sess);
+  if (!a) { a = { source: '', target: '' }; accum.set(sess, a); }
+  return a;
+}
+
+function onDcMessage(sess, e) {
   let evt;
   try { evt = JSON.parse(e.data); } catch { return; }
+  const a = getAcc(sess);
 
   switch (evt.type) {
     case 'session.input_transcript.delta':
     case 'conversation.item.input_audio_transcription.delta':
-      appendSource(evt.delta || '');
+      a.source += (evt.delta || '');
+      routeText(sess, 'source', a.source);
       break;
     case 'session.input_transcript.completed':
     case 'conversation.item.input_audio_transcription.completed':
-      if (evt.transcript) replaceSource(evt.transcript);
-      finalizeSource();
+      if (evt.transcript) a.source = evt.transcript;
+      routeText(sess, 'source', a.source, true);
+      a.source = '';
       break;
     case 'session.output_transcript.delta':
     case 'response.audio_transcript.delta':
-      appendTarget(evt.delta || '');
+      a.target += (evt.delta || '');
+      routeText(sess, 'target', a.target);
       break;
     case 'session.output_transcript.completed':
     case 'response.audio_transcript.done':
-      if (evt.transcript) replaceTarget(evt.transcript);
-      finalizeTarget();
+      if (evt.transcript) a.target = evt.transcript;
+      routeText(sess, 'target', a.target, true);
+      a.target = '';
       break;
     case 'input_audio_buffer.speech_started':
       logLine('🎙️ 检测到语音...');
-      currentSourceItem = '';
-      currentTargetItem = '';
       break;
     case 'input_audio_buffer.speech_stopped':
       logLine('翻译中...');
@@ -559,59 +645,57 @@ function onDcMessage(e) {
     case 'error':
       showError(`API 错误: ${evt.error?.message || JSON.stringify(evt.error)}`);
       break;
-    default:
-      // Uncomment for debugging unknown events
-      // console.log('event:', evt.type, evt);
-      break;
   }
 }
 
-function appendSource(delta) {
-  if (currentSourceItem === null) currentSourceItem = '';
-  currentSourceItem += delta;
-  renderSource();
-}
-function replaceSource(text) {
-  currentSourceItem = text;
-  renderSource();
-}
-function renderSource() {
-  els.sourceText.textContent = currentSourceItem || '...';
-}
-function finalizeSource() {
-  if (currentSourceItem) els.sourceText.textContent = currentSourceItem;
-  currentSourceItem = null;
-}
+function routeText(sess, kind, text, isFinal) {
+  if (!text) return;
 
-function appendTarget(delta) {
-  if (currentTargetItem === null) currentTargetItem = '';
-  currentTargetItem += delta;
-  renderTarget();
-}
-function replaceTarget(text) {
-  currentTargetItem = text;
-  renderTarget();
-}
-function renderTarget() {
-  els.targetText.textContent = currentTargetItem || '...';
-}
-function finalizeTarget() {
-  if (currentTargetItem) els.targetText.textContent = currentTargetItem;
-  currentTargetItem = null;
-  logLine('继续说话...');
+  if (STATE.mode === 'single') {
+    // single: panel1 = source, panel2 = target (regardless of direction)
+    if (kind === 'source') {
+      els.panel1Text.textContent = text;
+    } else {
+      els.panel2Text.textContent = text;
+      if (isFinal) logLine('继续说话...');
+    }
+    return;
+  }
+
+  // dual mode: route by language detection of the text content
+  const lang = detectLang(text);
+  // To avoid duplicate input transcripts from both sessions: only use input transcript from session whose target is OPPOSITE of detected source
+  if (kind === 'source') {
+    // input transcript represents source speech. Both sessions emit it. Dedupe: only accept from session whose target ≠ source lang
+    if (sess.target === lang) return; // skip echo session
+  } else {
+    // target transcript: only emit from session whose target language matches the panel direction
+    // The session's target IS the output lang by definition
+  }
+
+  const targetPanelText = (kind === 'source' ? lang : sess.target) === 'zh' ? els.panel1Text : els.panel2Text;
+  targetPanelText.textContent = text;
+  if (isFinal && kind === 'target') logLine('继续说话...');
 }
 
 async function stop() {
-  isRecording = false;
-  isPaused = false;
+  STATE.isRecording = false;
+  STATE.isPaused = false;
   els.micBtn.classList.remove('recording', 'paused');
   els.micBtn.textContent = '🎤';
-  if (dc) { try { dc.close(); } catch {} dc = null; }
-  if (pc) { try { pc.close(); } catch {} pc = null; }
-  if (localStream) {
-    localStream.getTracks().forEach(t => t.stop());
-    localStream = null;
+
+  for (const s of STATE.sessions) {
+    try { s.dc.close(); } catch {}
+    try { s.pc.close(); } catch {}
   }
+  STATE.sessions = [];
+
+  if (STATE.localStream) {
+    STATE.localStream.getTracks().forEach(t => t.stop());
+    STATE.localStream = null;
+  }
+  els.audio_en.srcObject = null;
+  els.audio_zh.srcObject = null;
   setStatus('', '未连接');
   logLine('已停止');
   updateControls();
