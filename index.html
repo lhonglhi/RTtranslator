@@ -2,294 +2,368 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>实时翻译 · RT Translator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>实时翻译</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --fg: #0a0a0a;
+    --fg-2: #555555;
+    --fg-3: #888888;
+    --border: #d4d4d4;
+    --panel: #f5f5f5;
+    --accent: #0066cc;
+    --record: #d63031;
+    --pause: #e67e22;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Heiti SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 16px;
+    font-size: 18px;
+    line-height: 1.4;
   }
-  header { text-align: center; margin-bottom: 16px; }
-  h1 {
-    font-size: 26px;
-    font-weight: 600;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .subtitle { color: #94a3b8; font-size: 13px; margin-top: 4px; }
 
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    width: 100%;
-    flex: 1;
+  .topbar {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
   }
-  .row {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+  .title { font-size: 24px; font-weight: 700; }
+  .icon-btn {
+    background: transparent;
+    border: 2px solid var(--border);
+    width: 44px; height: 44px;
     border-radius: 12px;
-    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--fg);
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
   }
-  .row input, .row select {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #e2e8f0;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .row input:focus, .row select:focus { border-color: #60a5fa; }
-  .row input[type="password"] { flex: 1; min-width: 200px; }
-  .row label { font-size: 13px; color: #94a3b8; }
-  .status {
-    display: inline-flex;
+  .icon-btn:active { background: var(--panel); }
+
+  .status-bar {
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    font-size: 13px;
-    color: #94a3b8;
-    margin-left: auto;
+    font-size: 14px;
+    color: var(--fg-2);
+    margin-bottom: 12px;
+    min-height: 22px;
   }
-  .status-dot {
-    width: 8px; height: 8px;
+  .dot {
+    width: 10px; height: 10px;
     border-radius: 50%;
-    background: #64748b;
+    background: var(--fg-3);
     transition: background 0.3s;
   }
-  .status-dot.connecting { background: #fbbf24; animation: pulse 1s infinite; }
-  .status-dot.connected { background: #34d399; }
-  .status-dot.error { background: #f87171; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .dot.connecting { background: var(--pause); animation: pulse 1s infinite; }
+  .dot.connected { background: #27ae60; }
+  .dot.error { background: var(--record); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  .toggle-group {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 12px;
-    padding: 6px;
+  .direction-swap {
     display: flex;
-    gap: 4px;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    height: 64px;
   }
-  .tg-btn {
+  .swap-side {
     flex: 1;
-    background: transparent;
-    border: none;
-    padding: 10px 14px;
-    color: #94a3b8;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .tg-btn.active {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-  }
-  .tg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .tg-btn .sub { display: block; font-size: 11px; opacity: 0.7; margin-top: 2px; }
-
-  .mic-btn {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    font-size: 32px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-    transition: transform 0.15s, box-shadow 0.2s;
-  }
-  .mic-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5); }
-  .mic-btn:active:not(:disabled) { transform: scale(0.98); }
-  .mic-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
-  .mic-btn.recording {
-    background: linear-gradient(135deg, #ef4444, #f43f5e);
-    animation: recordPulse 1.5s infinite;
-  }
-  .mic-btn.paused {
-    background: linear-gradient(135deg, #f59e0b, #f97316);
-    animation: none;
-  }
-  @keyframes recordPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-    50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-  }
-  .controls {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    align-items: center;
-  }
-  .ctrl-btn {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(71, 85, 105, 0.6);
-    color: #e2e8f0;
     font-size: 22px;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--fg);
+    border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s, transform 0.15s;
+    padding: 0;
   }
-  .ctrl-btn:hover:not(:disabled) {
-    background: rgba(100, 116, 139, 0.8);
-    transform: scale(1.05);
+  .swap-side:active { background: var(--panel); }
+  .swap-side.from { background: var(--accent); color: white; }
+  .swap-arrow {
+    width: 72px;
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0;
   }
-  .ctrl-btn:active:not(:disabled) { transform: scale(0.95); }
-  .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .swap-arrow:active { opacity: 0.7; }
+  .swap-arrow.dual { background: #7e57c2; }
 
   .panels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    flex: 1;
-    min-height: 260px;
-  }
-  @media (max-width: 640px) {
-    .panels { grid-template-columns: 1fr; }
-  }
-  .panel {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 12px;
-    padding: 14px;
     display: flex;
     flex-direction: column;
-    min-height: 180px;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
   }
+  .panel {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 110px;
+    position: relative;
+  }
+  .panel.active-source { border-color: var(--accent); }
+  .panel.active-target { border-color: #27ae60; }
   .panel-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 8px;
   }
   .panel-label {
-    font-size: 12px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--fg-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  .mute-btn {
-    background: transparent;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    color: #94a3b8;
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .mute-btn.muted { color: #f87171; border-color: rgba(248, 113, 113, 0.5); }
   .panel-text {
     flex: 1;
-    font-size: 17px;
-    line-height: 1.6;
-    color: #f1f5f9;
+    font-size: 26px;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--fg);
     overflow-y: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
-  .panel-text.muted-text { color: #64748b; font-style: italic; }
-  .log {
-    font-size: 12px;
-    color: #64748b;
-    text-align: center;
-    min-height: 18px;
+  .panel-text.empty { color: var(--fg-3); font-weight: 400; font-size: 18px; }
+  .mute-btn {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    color: var(--fg);
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
   }
+  .mute-btn.muted { color: var(--record); border-color: var(--record); }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding-top: 18px;
+  }
+  .big-btn {
+    flex: 1;
+    height: 84px;
+    border-radius: 18px;
+    border: none;
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+  }
+  .big-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 4px 0 rgba(0,0,0,0.15); }
+  .big-btn:disabled { background: var(--fg-3) !important; cursor: not-allowed; box-shadow: none; opacity: 0.5; }
+  .btn-start { background: #27ae60; }
+  .btn-start.recording { background: var(--record); animation: rec 1.5s infinite; }
+  .btn-stop { background: var(--record); }
+  @keyframes rec {
+    0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(214,48,49,0.5); }
+    50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 14px rgba(214,48,49,0); }
+  }
+
   .error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
+    background: #ffe5e5;
+    border: 2px solid var(--record);
+    color: var(--record);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    margin-bottom: 12px;
     display: none;
+    font-weight: 500;
   }
   .error.show { display: block; }
-  .hint {
-    font-size: 12px;
-    color: #64748b;
-    text-align: center;
-    margin-top: 4px;
+
+  /* Settings overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
   }
-  .hidden { display: none !important; }
+  .overlay.show { display: flex; }
+  .sheet {
+    background: var(--bg);
+    width: 100%;
+    max-width: 500px;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .sheet-title {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 15px; font-weight: 600; color: var(--fg-2); }
+  .field input {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 18px;
+    color: var(--fg);
+    outline: none;
+    width: 100%;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .seg {
+    display: flex;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .seg-btn {
+    flex: 1;
+    background: var(--bg);
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    color: var(--fg);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .seg-btn.active { background: var(--fg); color: var(--bg); font-weight: 700; }
+  .seg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .seg-btn:not(:last-child) { border-right: 2px solid var(--border); }
+  .close-btn {
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .field-hint { font-size: 13px; color: var(--fg-3); }
+
+  .cost {
+    font-size: 13px;
+    color: var(--fg-3);
+    text-align: center;
+    margin-top: 8px;
+  }
+  .cost strong { color: var(--fg); }
+
+  @media (max-width: 380px) {
+    body { padding: 12px; font-size: 16px; }
+    .title { font-size: 20px; }
+    .swap-side { font-size: 18px; }
+    .panel-text { font-size: 22px; }
+    .mic-btn { width: 84px; height: 84px; font-size: 34px; }
+    .ctrl-btn { width: 60px; height: 60px; font-size: 24px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>实时翻译</h1>
-  <div class="subtitle">gpt-realtime-translate · 中 ↔ 英</div>
-</header>
 
-<div class="container">
-  <div class="row">
-    <input type="password" id="apiKey" placeholder="OpenAI API Key (sk-...)" autocomplete="off">
-    <select id="voice" title="译文语音" class="hidden">
-      <option value="alloy">Alloy</option>
-    </select>
-    <div class="status">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusText">未连接</span>
+<div class="topbar">
+  <div class="title">实时翻译</div>
+  <button class="icon-btn" id="openSettings" title="设置">⚙</button>
+</div>
+
+<div class="status-bar">
+  <span class="dot" id="statusDot"></span>
+  <span id="statusText">未连接</span>
+</div>
+
+<div class="error" id="errorBox"></div>
+
+<div class="direction-swap" id="dirSwap">
+  <button class="swap-side" id="leftLabel">🇨🇳 中文</button>
+  <button class="swap-arrow" id="swapBtn" title="点击切换单向/双向">→</button>
+  <button class="swap-side" id="rightLabel">🇺🇸 English</button>
+</div>
+
+<div class="panels">
+  <div class="panel" id="panel1">
+    <div class="panel-header">
+      <div class="panel-label">🇨🇳 中文</div>
+      <button class="mute-btn" id="mute1">🔊</button>
     </div>
+    <div class="panel-text empty" id="panel1Text">等待...</div>
   </div>
-
-  <div class="toggle-group" id="modeBox">
-    <button class="tg-btn active" data-mode="single">单向<span class="sub">¥0.25/分钟 · 手动切方向</span></button>
-    <button class="tg-btn" data-mode="dual">双向<span class="sub">¥0.50/分钟 · 自动双向</span></button>
-  </div>
-
-  <div class="toggle-group" id="dirBox">
-    <button class="tg-btn active" data-target="en">🇨🇳 中 → 英 🇺🇸</button>
-    <button class="tg-btn" data-target="zh">🇺🇸 英 → 中 🇨🇳</button>
-  </div>
-
-  <div class="error" id="errorBox"></div>
-
-  <div class="controls">
-    <button class="ctrl-btn" id="pauseBtn" title="暂停 / 恢复" disabled>⏸</button>
-    <button class="mic-btn" id="micBtn" disabled>🎤</button>
-    <button class="ctrl-btn" id="stopBtn" title="停止" disabled>⏹</button>
-  </div>
-  <div class="log" id="log">填入 API Key 后选择模式, 点击麦克风开始</div>
-
-  <div class="panels">
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-label" id="panel1Label">🇨🇳 中文</div>
-        <button class="mute-btn" id="mute1" data-target="zh">🔊 播放</button>
-      </div>
-      <div class="panel-text muted-text" id="panel1Text">等待...</div>
+  <div class="panel" id="panel2">
+    <div class="panel-header">
+      <div class="panel-label">🇺🇸 English</div>
+      <button class="mute-btn" id="mute2">🔊</button>
     </div>
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-label" id="panel2Label">🇺🇸 English</div>
-        <button class="mute-btn" id="mute2" data-target="en">🔊 播放</button>
-      </div>
-      <div class="panel-text muted-text" id="panel2Text">Waiting...</div>
-    </div>
+    <div class="panel-text empty" id="panel2Text">Waiting...</div>
   </div>
-  <div class="hint">提示: API Key 仅存于本地浏览器。双向模式同时跑 2 个会话, 价格 ×2。</div>
+</div>
+
+<div class="controls">
+  <button class="big-btn btn-start" id="startBtn" disabled>🎤 开始对话</button>
+  <button class="big-btn btn-stop" id="stopBtn" disabled>⏹ 结束对话</button>
+</div>
+
+<div class="cost">
+  <span id="costLine">点击 ⚙ 填入 API Key 开始</span>
+</div>
+
+<!-- Settings sheet -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-title">设置</div>
+    <div class="field">
+      <label>OpenAI API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+      <div class="field-hint">仅保存在本地浏览器, 不上传第三方。境内使用需翻墙 (api.openai.com 被墙)。</div>
+    </div>
+    <button class="close-btn" id="closeSettings">完成</button>
+  </div>
 </div>
 
 <audio id="audio_en" autoplay playsinline></audio>
@@ -302,68 +376,100 @@ const CALLS_URL = "https://api.openai.com/v1/realtime/translations/calls";
 
 const els = {
   apiKey: document.getElementById('apiKey'),
-  voice: document.getElementById('voice'),
-  micBtn: document.getElementById('micBtn'),
-  pauseBtn: document.getElementById('pauseBtn'),
+  startBtn: document.getElementById('startBtn'),
   stopBtn: document.getElementById('stopBtn'),
   statusDot: document.getElementById('statusDot'),
   statusText: document.getElementById('statusText'),
-  log: document.getElementById('log'),
   errorBox: document.getElementById('errorBox'),
-  modeBox: document.getElementById('modeBox'),
-  dirBox: document.getElementById('dirBox'),
-  panel1Label: document.getElementById('panel1Label'),
-  panel2Label: document.getElementById('panel2Label'),
+  costLine: document.getElementById('costLine'),
+  panel1: document.getElementById('panel1'),
+  panel2: document.getElementById('panel2'),
   panel1Text: document.getElementById('panel1Text'),
   panel2Text: document.getElementById('panel2Text'),
   mute1: document.getElementById('mute1'),
   mute2: document.getElementById('mute2'),
   audio_en: document.getElementById('audio_en'),
   audio_zh: document.getElementById('audio_zh'),
+  leftLabel: document.getElementById('leftLabel'),
+  rightLabel: document.getElementById('rightLabel'),
+  swapBtn: document.getElementById('swapBtn'),
+  dirSwap: document.getElementById('dirSwap'),
+  openSettings: document.getElementById('openSettings'),
+  closeSettings: document.getElementById('closeSettings'),
+  overlay: document.getElementById('overlay'),
 };
 
 const STATE = {
-  mode: localStorage.getItem('mode') || 'single', // 'single' | 'dual'
   targetLang: localStorage.getItem('target_lang') || 'en',
   sessions: [],
   localStream: null,
   isRecording: false,
-  isPaused: false,
   muted: { en: false, zh: false },
+  recordStartMs: 0,
+  costTimer: null,
 };
 
-// Restore UI
+// Init
 els.apiKey.value = localStorage.getItem('openai_api_key') || '';
-els.voice.value = localStorage.getItem('voice') || 'verse';
-applyMode(STATE.mode);
 applyDirection(STATE.targetLang);
 updateMicBtn();
+renderCostIdle();
+
+els.openSettings.addEventListener('click', () => els.overlay.classList.add('show'));
+els.closeSettings.addEventListener('click', () => els.overlay.classList.remove('show'));
+els.overlay.addEventListener('click', (e) => {
+  if (e.target === els.overlay) els.overlay.classList.remove('show');
+});
 
 els.apiKey.addEventListener('input', () => {
   localStorage.setItem('openai_api_key', els.apiKey.value.trim());
   updateMicBtn();
 });
-els.voice.addEventListener('change', () => {
-  localStorage.setItem('voice', els.voice.value);
+
+// Click left label → speaker is 中文 → target=en
+els.leftLabel.addEventListener('click', () => setDirection('en'));
+// Click right label → speaker is English → target=zh
+els.rightLabel.addEventListener('click', () => setDirection('zh'));
+// Click arrow → flip direction
+els.swapBtn.addEventListener('click', () => {
+  setDirection(STATE.targetLang === 'en' ? 'zh' : 'en');
 });
 
-els.modeBox.querySelectorAll('.tg-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (STATE.isRecording) return showError('录音中无法切模式, 请先停止');
-    STATE.mode = btn.dataset.mode;
-    localStorage.setItem('mode', STATE.mode);
-    applyMode(STATE.mode);
-  });
-});
+function setDirection(target) {
+  if (STATE.targetLang === target) return;
+  STATE.targetLang = target;
+  localStorage.setItem('target_lang', STATE.targetLang);
+  applyDirection(STATE.targetLang);
 
-els.dirBox.querySelectorAll('.tg-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (STATE.isRecording) return showError('录音中无法切方向, 请先停止');
-    STATE.targetLang = btn.dataset.target;
-    localStorage.setItem('target_lang', STATE.targetLang);
-    applyDirection(STATE.targetLang);
-  });
-});
+  // Live switch if recording
+  if (STATE.isRecording && STATE.sessions[0]) {
+    const sess = STATE.sessions[0];
+    sess.target = STATE.targetLang;
+    try {
+      const newAudio = STATE.targetLang === 'en' ? els.audio_en : els.audio_zh;
+      const oldAudio = STATE.targetLang === 'en' ? els.audio_zh : els.audio_en;
+      if (sess.audioEl && sess.audioEl.srcObject && newAudio !== sess.audioEl) {
+        newAudio.srcObject = sess.audioEl.srcObject;
+        oldAudio.srcObject = null;
+      }
+      sess.audioEl = newAudio;
+    } catch {}
+
+    try {
+      sess.dc.send(JSON.stringify({
+        type: 'session.update',
+        session: {
+          audio: {
+            input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
+            output: { language: STATE.targetLang },
+          },
+        },
+      }));
+    } catch (err) {
+      showError('切换失败, 请重新开始: ' + err.message);
+    }
+  }
+}
 
 els.mute1.addEventListener('click', () => toggleMute('zh', els.mute1));
 els.mute2.addEventListener('click', () => toggleMute('en', els.mute2));
@@ -372,42 +478,41 @@ function toggleMute(lang, btn) {
   STATE.muted[lang] = !STATE.muted[lang];
   const audio = lang === 'en' ? els.audio_en : els.audio_zh;
   audio.muted = STATE.muted[lang];
-  btn.textContent = STATE.muted[lang] ? '🔇 静音' : '🔊 播放';
+  btn.textContent = STATE.muted[lang] ? '🔇' : '🔊';
   btn.classList.toggle('muted', STATE.muted[lang]);
 }
 
-function applyMode(mode) {
-  els.modeBox.querySelectorAll('.tg-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.mode === mode);
-  });
-  els.dirBox.classList.toggle('hidden', mode !== 'single');
-  els.panel1Label.textContent = '🇨🇳 中文';
-  els.panel2Label.textContent = '🇺🇸 English';
-  els.panel1Text.textContent = '等待...';
-  els.panel2Text.textContent = 'Waiting...';
-}
-
 function applyDirection(target) {
-  els.dirBox.querySelectorAll('.tg-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.target === target);
-  });
+  els.leftLabel.textContent = '🇨🇳 中文';
+  els.rightLabel.textContent = '🇺🇸 English';
+  els.swapBtn.title = '点击切换方向';
+  if (target === 'en') {
+    els.leftLabel.classList.add('from');
+    els.rightLabel.classList.remove('from');
+    els.swapBtn.textContent = '→';
+  } else {
+    els.leftLabel.classList.remove('from');
+    els.rightLabel.classList.add('from');
+    els.swapBtn.textContent = '←';
+  }
 }
 
 function updateMicBtn() {
-  els.micBtn.disabled = !els.apiKey.value.trim();
+  const hasKey = !!els.apiKey.value.trim();
+  els.startBtn.disabled = !hasKey || STATE.isRecording;
 }
 
 function updateControls() {
-  els.pauseBtn.disabled = !STATE.isRecording;
+  const hasKey = !!els.apiKey.value.trim();
+  els.startBtn.disabled = !hasKey || STATE.isRecording;
   els.stopBtn.disabled = !STATE.isRecording;
-  els.pauseBtn.textContent = STATE.isPaused ? '▶' : '⏸';
-  els.pauseBtn.title = STATE.isPaused ? '恢复' : '暂停';
-  els.modeBox.querySelectorAll('.tg-btn').forEach(b => b.disabled = STATE.isRecording);
-  els.dirBox.querySelectorAll('.tg-btn').forEach(b => b.disabled = STATE.isRecording);
+  els.startBtn.classList.toggle('recording', STATE.isRecording);
+  els.startBtn.textContent = STATE.isRecording ? '🔴 正在听...' : '🎤 开始对话';
+  els.swapBtn.disabled = false;
 }
 
 function setStatus(state, text) {
-  els.statusDot.className = 'status-dot ' + state;
+  els.statusDot.className = 'dot ' + state;
   els.statusText.textContent = text;
 }
 
@@ -417,45 +522,42 @@ function showError(msg) {
   setTimeout(() => els.errorBox.classList.remove('show'), 8000);
 }
 
-function logLine(msg) { els.log.textContent = msg; }
-
-els.micBtn.addEventListener('click', async () => {
-  if (STATE.isRecording) togglePause();
-  else await start();
-});
-
-els.pauseBtn.addEventListener('click', togglePause);
-els.stopBtn.addEventListener('click', stop);
-
-function togglePause() {
-  if (!STATE.isRecording || !STATE.localStream) return;
-  STATE.isPaused = !STATE.isPaused;
-  STATE.localStream.getAudioTracks().forEach(t => t.enabled = !STATE.isPaused);
-
-  if (STATE.isPaused) {
-    els.micBtn.classList.remove('recording');
-    els.micBtn.classList.add('paused');
-    els.micBtn.textContent = '⏸';
-    setStatus('connecting', '已暂停');
-    logLine('麦克风静音, 点击恢复');
-  } else {
-    els.micBtn.classList.remove('paused');
-    els.micBtn.classList.add('recording');
-    els.micBtn.textContent = '🎤';
-    setStatus('connected', '已连接');
-    logLine('恢复, 继续说话...');
-  }
-  updateControls();
+function renderCostIdle() {
+  els.costLine.innerHTML = '<strong>¥0.25/分钟</strong>';
 }
+
+function startCostTimer() {
+  STATE.recordStartMs = Date.now();
+  const ratePerMin = 0.25;
+  const update = () => {
+    const elapsedMin = (Date.now() - STATE.recordStartMs) / 60000;
+    const cost = elapsedMin * ratePerMin;
+    const min = Math.floor(elapsedMin);
+    const sec = Math.floor((elapsedMin - min) * 60);
+    els.costLine.innerHTML = `已用 ${min}:${String(sec).padStart(2,'0')} · 花费 <strong>¥${cost.toFixed(2)}</strong>`;
+  };
+  update();
+  STATE.costTimer = setInterval(update, 1000);
+}
+
+function stopCostTimer() {
+  if (STATE.costTimer) { clearInterval(STATE.costTimer); STATE.costTimer = null; }
+  renderCostIdle();
+}
+
+els.startBtn.addEventListener('click', start);
+els.stopBtn.addEventListener('click', stop);
 
 async function start() {
   const key = els.apiKey.value.trim();
-  if (!key) return showError('请先填入 API Key');
+  if (!key) {
+    els.overlay.classList.add('show');
+    return showError('请先填入 API Key');
+  }
   localStorage.setItem('openai_api_key', key);
 
   try {
     setStatus('connecting', '连接中...');
-    logLine('请求麦克风权限...');
 
     STATE.localStream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -465,33 +567,20 @@ async function start() {
       },
     });
 
-    const targets = STATE.mode === 'single' ? [STATE.targetLang] : ['en', 'zh'];
-    logLine(`建立 ${targets.length} 个翻译会话...`);
-
-    STATE.sessions = [];
-    for (const target of targets) {
-      const sess = await createSession(key, target);
-      STATE.sessions.push(sess);
-    }
+    STATE.sessions = [await createSession(key, STATE.targetLang)];
 
     STATE.isRecording = true;
-    STATE.isPaused = false;
-    els.micBtn.classList.add('recording');
-    els.micBtn.textContent = '🎤';
-    setStatus('connected', '已连接');
-    logLine(STATE.mode === 'single'
-      ? (STATE.targetLang === 'en' ? '说中文 → 出英文' : '说英文 → 出中文')
-      : '双向模式: 自由说中英文, 自动翻译');
-    els.panel1Text.classList.remove('muted-text');
-    els.panel2Text.classList.remove('muted-text');
+    setStatus('connected', '正在听');
+    els.panel1Text.classList.remove('empty');
+    els.panel2Text.classList.remove('empty');
     els.panel1Text.textContent = '';
     els.panel2Text.textContent = '';
     updateControls();
+    startCostTimer();
   } catch (err) {
     console.error(err);
     showError(err.message);
     setStatus('error', '错误');
-    logLine('连接失败');
     await stop();
   }
 }
@@ -580,7 +669,6 @@ function onDcOpen(sess) {
 const CJK_RE = /[一-鿿]/;
 function detectLang(text) { return CJK_RE.test(text) ? 'zh' : 'en'; }
 
-// Per-session text accumulators
 const accum = new WeakMap();
 function getAcc(sess) {
   let a = accum.get(sess);
@@ -617,10 +705,7 @@ function onDcMessage(sess, e) {
       a.target = '';
       break;
     case 'input_audio_buffer.speech_started':
-      logLine('🎙️ 检测到语音...');
-      break;
     case 'input_audio_buffer.speech_stopped':
-      logLine('翻译中...');
       break;
     case 'session.created':
     case 'session.updated':
@@ -633,29 +718,23 @@ function onDcMessage(sess, e) {
 
 function routeText(sess, kind, text, isFinal) {
   if (!text) return;
-
-  // Always route by language: panel1 = 中文, panel2 = English
-  // For source: detect lang from content
-  // For target: session.target IS the output language
-  let lang;
-  if (kind === 'source') {
-    lang = detectLang(text);
-    // In dual mode dedupe: both sessions emit same input transcript. Only accept from session whose target ≠ source lang.
-    if (STATE.mode === 'dual' && sess.target === lang) return;
-  } else {
-    lang = sess.target;
-  }
+  const lang = kind === 'source' ? detectLang(text) : sess.target;
 
   const panel = lang === 'zh' ? els.panel1Text : els.panel2Text;
+  const panelBox = lang === 'zh' ? els.panel1 : els.panel2;
+  panel.classList.remove('empty');
   panel.textContent = text;
-  if (isFinal && kind === 'target') logLine('继续说话...');
+
+  els.panel1.classList.remove('active-source', 'active-target');
+  els.panel2.classList.remove('active-source', 'active-target');
+  panelBox.classList.add(kind === 'source' ? 'active-source' : 'active-target');
+  if (isFinal) {
+    setTimeout(() => panelBox.classList.remove('active-source', 'active-target'), 800);
+  }
 }
 
 async function stop() {
   STATE.isRecording = false;
-  STATE.isPaused = false;
-  els.micBtn.classList.remove('recording', 'paused');
-  els.micBtn.textContent = '🎤';
 
   for (const s of STATE.sessions) {
     try { s.dc.close(); } catch {}
@@ -670,8 +749,8 @@ async function stop() {
   els.audio_en.srcObject = null;
   els.audio_zh.srcObject = null;
   setStatus('', '未连接');
-  logLine('已停止');
   updateControls();
+  stopCostTimer();
 }
 
 window.addEventListener('beforeunload', stop);
