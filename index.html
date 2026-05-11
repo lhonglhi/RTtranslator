@@ -277,14 +277,14 @@
     <div class="panel">
       <div class="panel-header">
         <div class="panel-label" id="panel1Label">🇨🇳 中文</div>
-        <button class="mute-btn hidden" id="mute1" data-target="zh">🔊 播放</button>
+        <button class="mute-btn" id="mute1" data-target="zh">🔊 播放</button>
       </div>
       <div class="panel-text muted-text" id="panel1Text">等待...</div>
     </div>
     <div class="panel">
       <div class="panel-header">
         <div class="panel-label" id="panel2Label">🇺🇸 English</div>
-        <button class="mute-btn hidden" id="mute2" data-target="en">🔊 播放</button>
+        <button class="mute-btn" id="mute2" data-target="en">🔊 播放</button>
       </div>
       <div class="panel-text muted-text" id="panel2Text">Waiting...</div>
     </div>
@@ -380,38 +380,17 @@ function applyMode(mode) {
   els.modeBox.querySelectorAll('.tg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.mode === mode);
   });
-  if (mode === 'single') {
-    els.dirBox.classList.remove('hidden');
-    els.mute1.classList.add('hidden');
-    els.mute2.classList.add('hidden');
-    applyDirection(STATE.targetLang);
-  } else {
-    els.dirBox.classList.add('hidden');
-    els.mute1.classList.remove('hidden');
-    els.mute2.classList.remove('hidden');
-    els.panel1Label.textContent = '🇨🇳 中文';
-    els.panel2Label.textContent = '🇺🇸 English';
-    els.panel1Text.textContent = '等待...';
-    els.panel2Text.textContent = 'Waiting...';
-  }
+  els.dirBox.classList.toggle('hidden', mode !== 'single');
+  els.panel1Label.textContent = '🇨🇳 中文';
+  els.panel2Label.textContent = '🇺🇸 English';
+  els.panel1Text.textContent = '等待...';
+  els.panel2Text.textContent = 'Waiting...';
 }
 
 function applyDirection(target) {
   els.dirBox.querySelectorAll('.tg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.target === target);
   });
-  if (STATE.mode !== 'single') return;
-  if (target === 'en') {
-    els.panel1Label.textContent = '📥 原文 (中文)';
-    els.panel2Label.textContent = '📤 译文 (English)';
-    els.panel1Text.textContent = '等待中文语音输入...';
-    els.panel2Text.textContent = 'Waiting for English translation...';
-  } else {
-    els.panel1Label.textContent = '📤 译文 (中文)';
-    els.panel2Label.textContent = '📥 原文 (English)';
-    els.panel1Text.textContent = '等待中文译文...';
-    els.panel2Text.textContent = 'Waiting for English speech...';
-  }
 }
 
 function updateMicBtn() {
@@ -651,30 +630,20 @@ function onDcMessage(sess, e) {
 function routeText(sess, kind, text, isFinal) {
   if (!text) return;
 
-  if (STATE.mode === 'single') {
-    // single: panel1 = source, panel2 = target (regardless of direction)
-    if (kind === 'source') {
-      els.panel1Text.textContent = text;
-    } else {
-      els.panel2Text.textContent = text;
-      if (isFinal) logLine('继续说话...');
-    }
-    return;
-  }
-
-  // dual mode: route by language detection of the text content
-  const lang = detectLang(text);
-  // To avoid duplicate input transcripts from both sessions: only use input transcript from session whose target is OPPOSITE of detected source
+  // Always route by language: panel1 = 中文, panel2 = English
+  // For source: detect lang from content
+  // For target: session.target IS the output language
+  let lang;
   if (kind === 'source') {
-    // input transcript represents source speech. Both sessions emit it. Dedupe: only accept from session whose target ≠ source lang
-    if (sess.target === lang) return; // skip echo session
+    lang = detectLang(text);
+    // In dual mode dedupe: both sessions emit same input transcript. Only accept from session whose target ≠ source lang.
+    if (STATE.mode === 'dual' && sess.target === lang) return;
   } else {
-    // target transcript: only emit from session whose target language matches the panel direction
-    // The session's target IS the output lang by definition
+    lang = sess.target;
   }
 
-  const targetPanelText = (kind === 'source' ? lang : sess.target) === 'zh' ? els.panel1Text : els.panel2Text;
-  targetPanelText.textContent = text;
+  const panel = lang === 'zh' ? els.panel1Text : els.panel2Text;
+  panel.textContent = text;
   if (isFinal && kind === 'target') logLine('继续说话...');
 }
 
