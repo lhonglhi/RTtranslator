@@ -501,6 +501,9 @@ async function createSession(key, target) {
     session: {
       model: MODEL,
       audio: {
+        input: {
+          transcription: { model: 'gpt-4o-mini-transcribe' },
+        },
         output: {
           language: target,
         },
@@ -566,6 +569,7 @@ function onDcOpen(sess) {
     type: 'session.update',
     session: {
       audio: {
+        input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
         output: { language: sess.target },
       },
     },
