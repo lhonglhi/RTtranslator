@@ -15,23 +15,17 @@
     flex-direction: column;
     padding: 20px;
   }
-  header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
+  header { text-align: center; margin-bottom: 20px; }
   h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 600;
     background: linear-gradient(90deg, #60a5fa, #a78bfa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .subtitle {
-    color: #94a3b8;
-    font-size: 14px;
-    margin-top: 6px;
-  }
+  .subtitle { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+
   .container {
     max-width: 900px;
     margin: 0 auto;
@@ -39,15 +33,15 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
   }
   .settings {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
-    padding: 16px;
+    padding: 14px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
     align-items: center;
   }
@@ -61,13 +55,8 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  .settings input:focus, .settings select:focus {
-    border-color: #60a5fa;
-  }
-  .settings input[type="password"] {
-    flex: 1;
-    min-width: 200px;
-  }
+  .settings input:focus, .settings select:focus { border-color: #60a5fa; }
+  .settings input[type="password"] { flex: 1; min-width: 200px; }
   .status {
     display: inline-flex;
     align-items: center;
@@ -76,8 +65,7 @@
     color: #94a3b8;
   }
   .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: #64748b;
     transition: background 0.3s;
@@ -85,36 +73,52 @@
   .status-dot.connecting { background: #fbbf24; animation: pulse 1s infinite; }
   .status-dot.connected { background: #34d399; }
   .status-dot.error { background: #f87171; }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .direction {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 6px;
+    display: flex;
+    gap: 4px;
   }
+  .dir-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: #94a3b8;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dir-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  .dir-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .mic-btn {
-    width: 80px;
-    height: 80px;
+    width: 80px; height: 80px;
     border-radius: 50%;
     border: none;
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     color: white;
     font-size: 32px;
     cursor: pointer;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
     transition: transform 0.15s, box-shadow 0.2s;
   }
-  .mic-btn:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
-  }
+  .mic-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5); }
   .mic-btn:active:not(:disabled) { transform: scale(0.98); }
-  .mic-btn:disabled {
-    background: #475569;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
+  .mic-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
   .mic-btn.recording {
     background: linear-gradient(135deg, #ef4444, #f43f5e);
     animation: recordPulse 1.5s infinite;
@@ -134,8 +138,7 @@
     align-items: center;
   }
   .ctrl-btn {
-    width: 56px;
-    height: 56px;
+    width: 56px; height: 56px;
     border-radius: 50%;
     border: none;
     background: rgba(71, 85, 105, 0.6);
@@ -152,16 +155,14 @@
     transform: scale(1.05);
   }
   .ctrl-btn:active:not(:disabled) { transform: scale(0.95); }
-  .ctrl-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
+  .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
   .panels {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     flex: 1;
-    min-height: 300px;
+    min-height: 280px;
   }
   @media (max-width: 640px) {
     .panels { grid-template-columns: 1fr; }
@@ -196,7 +197,6 @@
     font-size: 12px;
     color: #64748b;
     text-align: center;
-    margin-top: 8px;
     min-height: 18px;
   }
   .error {
@@ -220,13 +220,13 @@
 <body>
 <header>
   <h1>实时翻译</h1>
-  <div class="subtitle">GPT Realtime · 中 ↔ 英</div>
+  <div class="subtitle">gpt-realtime-translate · 中 ↔ 英</div>
 </header>
 
 <div class="container">
   <div class="settings">
     <input type="password" id="apiKey" placeholder="OpenAI API Key (sk-...)" autocomplete="off">
-    <select id="voice">
+    <select id="voice" title="译文语音">
       <option value="alloy">Alloy</option>
       <option value="ash">Ash</option>
       <option value="ballad">Ballad</option>
@@ -242,6 +242,11 @@
     </div>
   </div>
 
+  <div class="direction" id="directionBox">
+    <button class="dir-btn active" data-target="en">🇨🇳 中 → 英 🇺🇸</button>
+    <button class="dir-btn" data-target="zh">🇺🇸 英 → 中 🇨🇳</button>
+  </div>
+
   <div class="error" id="errorBox"></div>
 
   <div class="controls">
@@ -249,7 +254,7 @@
     <button class="mic-btn" id="micBtn" disabled>🎤</button>
     <button class="ctrl-btn" id="stopBtn" title="停止" disabled>⏹</button>
   </div>
-  <div class="log" id="log">填入 API Key 后点击麦克风开始</div>
+  <div class="log" id="log">填入 API Key 后选择方向, 点击麦克风开始</div>
 
   <div class="panels">
     <div class="panel">
@@ -261,22 +266,15 @@
       <div class="panel-text muted" id="targetText">Waiting for translation...</div>
     </div>
   </div>
-  <div class="hint">提示: API Key 仅存于本地浏览器 (localStorage), 不会上传到任何第三方</div>
+  <div class="hint">提示: API Key 仅存于本地浏览器, 不上传第三方。切换方向需重新连接。</div>
 </div>
 
-<audio id="remoteAudio" autoplay></audio>
+<audio id="remoteAudio" autoplay playsinline></audio>
 
 <script>
-const MODEL = "gpt-realtime";
-const SYSTEM_INSTRUCTIONS = `You are a real-time bidirectional translator between Chinese and English.
-
-Rules:
-- If the user speaks Chinese, translate to natural English.
-- If the user speaks English, translate to natural Mandarin Chinese.
-- Output ONLY the translation. Do not add explanations, greetings, or commentary.
-- Preserve tone, register, and intent.
-- Keep pace with the speaker; produce translation as soon as possible.
-- For ambiguous short utterances, translate literally.`;
+const MODEL = "gpt-realtime-translate";
+const CLIENT_SECRETS_URL = "https://api.openai.com/v1/realtime/translations/client_secrets";
+const CALLS_URL = "https://api.openai.com/v1/realtime/translations/calls";
 
 const els = {
   apiKey: document.getElementById('apiKey'),
@@ -291,6 +289,7 @@ const els = {
   log: document.getElementById('log'),
   errorBox: document.getElementById('errorBox'),
   remoteAudio: document.getElementById('remoteAudio'),
+  directionBox: document.getElementById('directionBox'),
 };
 
 let pc = null;
@@ -298,23 +297,48 @@ let dc = null;
 let localStream = null;
 let isRecording = false;
 let isPaused = false;
+let targetLang = localStorage.getItem('target_lang') || 'en';
 let currentSourceItem = null;
 let currentTargetItem = null;
 
-// Restore key
+// Restore key, voice, direction
 const savedKey = localStorage.getItem('openai_api_key');
 if (savedKey) els.apiKey.value = savedKey;
-const savedVoice = localStorage.getItem('voice') || 'verse';
-els.voice.value = savedVoice;
+els.voice.value = localStorage.getItem('voice') || 'verse';
+setDirectionUI(targetLang);
 
-els.apiKey.addEventListener('change', () => {
+els.apiKey.addEventListener('input', () => {
   localStorage.setItem('openai_api_key', els.apiKey.value.trim());
   updateMicBtn();
 });
-els.apiKey.addEventListener('input', updateMicBtn);
 els.voice.addEventListener('change', () => {
   localStorage.setItem('voice', els.voice.value);
 });
+
+els.directionBox.querySelectorAll('.dir-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (isRecording) {
+      showError('录音中无法切换方向, 请先停止');
+      return;
+    }
+    targetLang = btn.dataset.target;
+    localStorage.setItem('target_lang', targetLang);
+    setDirectionUI(targetLang);
+  });
+});
+
+function setDirectionUI(target) {
+  els.directionBox.querySelectorAll('.dir-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.target === target);
+  });
+  if (target === 'en') {
+    els.sourceText.textContent = '等待中文语音输入...';
+    els.targetText.textContent = 'Waiting for English translation...';
+  } else {
+    els.sourceText.textContent = 'Waiting for English speech...';
+    els.targetText.textContent = '等待中文译文...';
+  }
+}
 
 function updateMicBtn() {
   els.micBtn.disabled = !els.apiKey.value.trim();
@@ -326,6 +350,7 @@ function updateControls() {
   els.stopBtn.disabled = !isRecording;
   els.pauseBtn.textContent = isPaused ? '▶' : '⏸';
   els.pauseBtn.title = isPaused ? '恢复' : '暂停';
+  els.directionBox.querySelectorAll('.dir-btn').forEach(b => b.disabled = isRecording);
 }
 
 function setStatus(state, text) {
@@ -379,9 +404,44 @@ async function start() {
   localStorage.setItem('openai_api_key', key);
 
   try {
-    setStatus('connecting', '连接中...');
-    logLine('请求麦克风权限...');
+    setStatus('connecting', '获取会话凭证...');
+    logLine('创建翻译会话...');
 
+    // Step 1: get ephemeral client secret
+    const sessionConfig = {
+      session: {
+        model: MODEL,
+        audio: {
+          output: {
+            language: targetLang,
+            voice: els.voice.value,
+          },
+        },
+      },
+    };
+
+    const csResp = await fetch(CLIENT_SECRETS_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(sessionConfig),
+    });
+
+    if (!csResp.ok) {
+      const errText = await csResp.text();
+      throw new Error(`获取凭证失败 (${csResp.status}): ${errText}`);
+    }
+
+    const csData = await csResp.json();
+    const clientSecret = csData.value || csData.client_secret?.value || csData.client_secret;
+    if (!clientSecret) {
+      throw new Error('返回数据中找不到 client_secret');
+    }
+
+    // Step 2: request mic
+    logLine('请求麦克风权限...');
     localStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -390,7 +450,8 @@ async function start() {
       },
     });
 
-    logLine('创建 WebRTC 连接...');
+    // Step 3: WebRTC
+    logLine('建立 WebRTC 连接...');
     pc = new RTCPeerConnection();
 
     pc.ontrack = (e) => {
@@ -402,30 +463,27 @@ async function start() {
     dc = pc.createDataChannel('oai-events');
     dc.addEventListener('open', onDcOpen);
     dc.addEventListener('message', onDcMessage);
-    dc.addEventListener('close', () => {
-      setStatus('', '已断开');
-    });
+    dc.addEventListener('close', () => setStatus('', '已断开'));
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    logLine('握手中...');
-    const resp = await fetch(`https://api.openai.com/v1/realtime?model=${MODEL}`, {
+    logLine('SDP 握手中...');
+    const sdpResp = await fetch(CALLS_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${key}`,
+        'Authorization': `Bearer ${clientSecret}`,
         'Content-Type': 'application/sdp',
-        'OpenAI-Beta': 'realtime=v1',
       },
       body: offer.sdp,
     });
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`SDP 交换失败 (${resp.status}): ${errText}`);
+    if (!sdpResp.ok) {
+      const errText = await sdpResp.text();
+      throw new Error(`SDP 交换失败 (${sdpResp.status}): ${errText}`);
     }
 
-    const answerSdp = await resp.text();
+    const answerSdp = await sdpResp.text();
     await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
     isRecording = true;
@@ -433,7 +491,7 @@ async function start() {
     els.micBtn.classList.add('recording');
     els.micBtn.textContent = '🎤';
     setStatus('connected', '已连接');
-    logLine('开始说话, 自动翻译中...');
+    logLine(targetLang === 'en' ? '说中文 → 出英文' : '说英文 → 出中文');
     els.sourceText.classList.remove('muted');
     els.targetText.classList.remove('muted');
     els.sourceText.textContent = '';
@@ -449,26 +507,19 @@ async function start() {
 }
 
 function onDcOpen() {
+  // Reconfirm session config in case translation API requires it post-handshake
   const sessionUpdate = {
     type: 'session.update',
     session: {
-      modalities: ['audio', 'text'],
-      instructions: SYSTEM_INSTRUCTIONS,
-      voice: els.voice.value,
-      input_audio_format: 'pcm16',
-      output_audio_format: 'pcm16',
-      input_audio_transcription: { model: 'whisper-1' },
-      turn_detection: {
-        type: 'server_vad',
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
-        create_response: true,
+      audio: {
+        output: {
+          language: targetLang,
+          voice: els.voice.value,
+        },
       },
-      temperature: 0.6,
     },
   };
-  dc.send(JSON.stringify(sessionUpdate));
+  try { dc.send(JSON.stringify(sessionUpdate)); } catch {}
 }
 
 function onDcMessage(e) {
@@ -476,32 +527,41 @@ function onDcMessage(e) {
   try { evt = JSON.parse(e.data); } catch { return; }
 
   switch (evt.type) {
+    case 'session.input_transcript.delta':
     case 'conversation.item.input_audio_transcription.delta':
       appendSource(evt.delta || '');
       break;
+    case 'session.input_transcript.completed':
     case 'conversation.item.input_audio_transcription.completed':
       if (evt.transcript) replaceSource(evt.transcript);
       finalizeSource();
       break;
+    case 'session.output_transcript.delta':
     case 'response.audio_transcript.delta':
       appendTarget(evt.delta || '');
       break;
+    case 'session.output_transcript.completed':
     case 'response.audio_transcript.done':
       if (evt.transcript) replaceTarget(evt.transcript);
       finalizeTarget();
       break;
-    case 'response.created':
-      currentTargetItem = '';
-      break;
     case 'input_audio_buffer.speech_started':
       logLine('🎙️ 检测到语音...');
       currentSourceItem = '';
+      currentTargetItem = '';
       break;
     case 'input_audio_buffer.speech_stopped':
       logLine('翻译中...');
       break;
+    case 'session.created':
+    case 'session.updated':
+      break;
     case 'error':
       showError(`API 错误: ${evt.error?.message || JSON.stringify(evt.error)}`);
+      break;
+    default:
+      // Uncomment for debugging unknown events
+      // console.log('event:', evt.type, evt);
       break;
   }
 }
@@ -519,9 +579,7 @@ function renderSource() {
   els.sourceText.textContent = currentSourceItem || '...';
 }
 function finalizeSource() {
-  if (currentSourceItem) {
-    els.sourceText.textContent = currentSourceItem;
-  }
+  if (currentSourceItem) els.sourceText.textContent = currentSourceItem;
   currentSourceItem = null;
 }
 
@@ -538,9 +596,7 @@ function renderTarget() {
   els.targetText.textContent = currentTargetItem || '...';
 }
 function finalizeTarget() {
-  if (currentTargetItem) {
-    els.targetText.textContent = currentTargetItem;
-  }
+  if (currentTargetItem) els.targetText.textContent = currentTargetItem;
   currentTargetItem = null;
   logLine('继续说话...');
 }
