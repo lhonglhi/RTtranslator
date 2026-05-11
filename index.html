@@ -114,51 +114,71 @@
   .swap-arrow:active { opacity: 0.7; }
   .swap-arrow.dual { background: #7e57c2; }
 
-  .panels {
+  .cards {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 1;
-    min-height: 0;
+    padding: 4px 2px;
+    min-height: 200px;
   }
-  .panel {
+  .card {
     background: var(--panel);
     border: 2px solid var(--border);
     border-radius: 16px;
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 110px;
-    position: relative;
+    gap: 6px;
+    word-wrap: break-word;
+    animation: cardIn 0.25s ease-out;
   }
-  .panel.active-source { border-color: var(--accent); }
-  .panel.active-target { border-color: #27ae60; }
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .panel-label {
-    font-size: 16px;
-    font-weight: 700;
+  .card.active { border-color: var(--accent); border-width: 3px; }
+  .card-flag {
+    font-size: 13px;
+    font-weight: 600;
     color: var(--fg-2);
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  .panel-text {
-    flex: 1;
-    font-size: 26px;
-    line-height: 1.45;
-    font-weight: 500;
+  .card-primary {
+    font-size: 28px;
+    line-height: 1.35;
+    font-weight: 600;
     color: var(--fg);
-    overflow-y: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    min-height: 1em;
   }
-  .panel-text.empty { color: var(--fg-3); font-weight: 400; font-size: 18px; }
+  .card-secondary {
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--fg-2);
+    font-weight: 400;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-3);
+    font-size: 18px;
+    text-align: center;
+    padding: 20px;
+  }
+  .mute-toggle {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
   .mute-btn {
     background: var(--bg);
     border: 2px solid var(--border);
@@ -327,21 +347,11 @@
   <button class="swap-side" id="rightLabel">🇺🇸 English</button>
 </div>
 
-<div class="panels">
-  <div class="panel" id="panel1">
-    <div class="panel-header">
-      <div class="panel-label">🇨🇳 中文</div>
-      <button class="mute-btn" id="mute1">🔊</button>
-    </div>
-    <div class="panel-text empty" id="panel1Text">等待...</div>
-  </div>
-  <div class="panel" id="panel2">
-    <div class="panel-header">
-      <div class="panel-label">🇺🇸 English</div>
-      <button class="mute-btn" id="mute2">🔊</button>
-    </div>
-    <div class="panel-text empty" id="panel2Text">Waiting...</div>
-  </div>
+<div class="cards" id="cards">
+  <div class="empty-state" id="emptyState">点击开始对话, 翻译卡片会出现在这里</div>
+</div>
+<div class="mute-toggle">
+  <button class="mute-btn" id="muteAll">🔊 语音</button>
 </div>
 
 <div class="controls">
@@ -382,12 +392,9 @@ const els = {
   statusText: document.getElementById('statusText'),
   errorBox: document.getElementById('errorBox'),
   costLine: document.getElementById('costLine'),
-  panel1: document.getElementById('panel1'),
-  panel2: document.getElementById('panel2'),
-  panel1Text: document.getElementById('panel1Text'),
-  panel2Text: document.getElementById('panel2Text'),
-  mute1: document.getElementById('mute1'),
-  mute2: document.getElementById('mute2'),
+  cards: document.getElementById('cards'),
+  emptyState: document.getElementById('emptyState'),
+  muteAll: document.getElementById('muteAll'),
   audio_en: document.getElementById('audio_en'),
   audio_zh: document.getElementById('audio_zh'),
   leftLabel: document.getElementById('leftLabel'),
@@ -404,10 +411,14 @@ const STATE = {
   sessions: [],
   localStream: null,
   isRecording: false,
-  muted: { en: false, zh: false },
+  audioMuted: localStorage.getItem('audio_muted') === '1',
   recordStartMs: 0,
   costTimer: null,
+  activeCard: null,
+  nextStartsNew: true,
 };
+
+const MAX_CARDS = 5;
 
 // Init
 els.apiKey.value = localStorage.getItem('openai_api_key') || '';
@@ -471,16 +482,18 @@ function setDirection(target) {
   }
 }
 
-els.mute1.addEventListener('click', () => toggleMute('zh', els.mute1));
-els.mute2.addEventListener('click', () => toggleMute('en', els.mute2));
-
-function toggleMute(lang, btn) {
-  STATE.muted[lang] = !STATE.muted[lang];
-  const audio = lang === 'en' ? els.audio_en : els.audio_zh;
-  audio.muted = STATE.muted[lang];
-  btn.textContent = STATE.muted[lang] ? '🔇' : '🔊';
-  btn.classList.toggle('muted', STATE.muted[lang]);
+els.muteAll.addEventListener('click', () => {
+  STATE.audioMuted = !STATE.audioMuted;
+  localStorage.setItem('audio_muted', STATE.audioMuted ? '1' : '0');
+  applyMute();
+});
+function applyMute() {
+  els.audio_en.muted = STATE.audioMuted;
+  els.audio_zh.muted = STATE.audioMuted;
+  els.muteAll.textContent = STATE.audioMuted ? '🔇 静音' : '🔊 语音';
+  els.muteAll.classList.toggle('muted', STATE.audioMuted);
 }
+applyMute();
 
 function applyDirection(target) {
   els.leftLabel.textContent = '🇨🇳 中文';
@@ -571,10 +584,7 @@ async function start() {
 
     STATE.isRecording = true;
     setStatus('connected', '正在听');
-    els.panel1Text.classList.remove('empty');
-    els.panel2Text.classList.remove('empty');
-    els.panel1Text.textContent = '';
-    els.panel2Text.textContent = '';
+    clearCards();
     updateControls();
     startCostTimer();
   } catch (err) {
@@ -666,14 +676,57 @@ function onDcOpen(sess) {
   try { sess.dc.send(JSON.stringify(sessionUpdate)); } catch {}
 }
 
-const CJK_RE = /[一-鿿]/;
-function detectLang(text) { return CJK_RE.test(text) ? 'zh' : 'en'; }
-
 const accum = new WeakMap();
 function getAcc(sess) {
   let a = accum.get(sess);
   if (!a) { a = { source: '', target: '' }; accum.set(sess, a); }
   return a;
+}
+
+const FLAG = { zh: '🇨🇳', en: '🇺🇸' };
+const LANG_NAME = { zh: '中文', en: 'English' };
+
+function newCard(sess) {
+  if (els.emptyState) { els.emptyState.remove(); els.emptyState = null; }
+
+  const targetLang = sess.target;
+  const sourceLang = targetLang === 'en' ? 'zh' : 'en';
+
+  const el = document.createElement('div');
+  el.className = 'card active';
+  el.innerHTML = `
+    <div class="card-flag">${FLAG[sourceLang]} ${LANG_NAME[sourceLang]} → ${FLAG[targetLang]} ${LANG_NAME[targetLang]}</div>
+    <div class="card-primary" data-role="primary"></div>
+    <div class="card-secondary" data-role="secondary"></div>
+  `;
+  els.cards.prepend(el);
+
+  // Trim to MAX_CARDS
+  while (els.cards.children.length > MAX_CARDS) {
+    els.cards.removeChild(els.cards.lastElementChild);
+  }
+
+  return {
+    el,
+    primary: el.querySelector('[data-role="primary"]'),
+    secondary: el.querySelector('[data-role="secondary"]'),
+    source: '',
+    target: '',
+    sourceLang,
+    targetLang,
+  };
+}
+
+function renderCard(card) {
+  card.primary.textContent = card.target || '…';
+  card.secondary.textContent = card.source || '';
+}
+
+function clearCards() {
+  els.cards.innerHTML = '<div class="empty-state" id="emptyState">点击开始对话, 翻译卡片会出现在这里</div>';
+  els.emptyState = document.getElementById('emptyState');
+  STATE.activeCard = null;
+  STATE.nextStartsNew = true;
 }
 
 function onDcMessage(sess, e) {
@@ -685,28 +738,38 @@ function onDcMessage(sess, e) {
     case 'session.input_transcript.delta':
     case 'conversation.item.input_audio_transcription.delta':
       a.source += (evt.delta || '');
-      routeText(sess, 'source', a.source);
+      ensureCard(sess);
+      STATE.activeCard.source = a.source;
+      renderCard(STATE.activeCard);
       break;
     case 'session.input_transcript.completed':
     case 'conversation.item.input_audio_transcription.completed':
       if (evt.transcript) a.source = evt.transcript;
-      routeText(sess, 'source', a.source, true);
+      ensureCard(sess);
+      STATE.activeCard.source = a.source;
+      renderCard(STATE.activeCard);
       a.source = '';
       break;
     case 'session.output_transcript.delta':
     case 'response.audio_transcript.delta':
       a.target += (evt.delta || '');
-      routeText(sess, 'target', a.target);
+      ensureCard(sess);
+      STATE.activeCard.target = a.target;
+      renderCard(STATE.activeCard);
       break;
     case 'session.output_transcript.completed':
     case 'response.audio_transcript.done':
       if (evt.transcript) a.target = evt.transcript;
-      routeText(sess, 'target', a.target, true);
+      ensureCard(sess);
+      STATE.activeCard.target = a.target;
+      renderCard(STATE.activeCard);
+      STATE.activeCard.el.classList.remove('active');
+      STATE.activeCard = null;
+      STATE.nextStartsNew = true;
       a.target = '';
       break;
     case 'input_audio_buffer.speech_started':
     case 'input_audio_buffer.speech_stopped':
-      break;
     case 'session.created':
     case 'session.updated':
       break;
@@ -716,20 +779,14 @@ function onDcMessage(sess, e) {
   }
 }
 
-function routeText(sess, kind, text, isFinal) {
-  if (!text) return;
-  const lang = kind === 'source' ? detectLang(text) : sess.target;
-
-  const panel = lang === 'zh' ? els.panel1Text : els.panel2Text;
-  const panelBox = lang === 'zh' ? els.panel1 : els.panel2;
-  panel.classList.remove('empty');
-  panel.textContent = text;
-
-  els.panel1.classList.remove('active-source', 'active-target');
-  els.panel2.classList.remove('active-source', 'active-target');
-  panelBox.classList.add(kind === 'source' ? 'active-source' : 'active-target');
-  if (isFinal) {
-    setTimeout(() => panelBox.classList.remove('active-source', 'active-target'), 800);
+function ensureCard(sess) {
+  if (STATE.nextStartsNew || !STATE.activeCard) {
+    STATE.activeCard = newCard(sess);
+    STATE.nextStartsNew = false;
+  } else if (STATE.activeCard.targetLang !== sess.target) {
+    // Direction changed mid-session: start fresh card
+    STATE.activeCard.el.classList.remove('active');
+    STATE.activeCard = newCard(sess);
   }
 }
 
