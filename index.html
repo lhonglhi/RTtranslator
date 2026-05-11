@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实时翻译 · RT Translator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .settings {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .settings input, .settings select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e2e8f0;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .settings input:focus, .settings select:focus {
+    border-color: #60a5fa;
+  }
+  .settings input[type="password"] {
+    flex: 1;
+    min-width: 200px;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+    transition: background 0.3s;
+  }
+  .status-dot.connecting { background: #fbbf24; animation: pulse 1s infinite; }
+  .status-dot.connected { background: #34d399; }
+  .status-dot.error { background: #f87171; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .mic-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .mic-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
+  }
+  .mic-btn:active:not(:disabled) { transform: scale(0.98); }
+  .mic-btn:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .mic-btn.recording {
+    background: linear-gradient(135deg, #ef4444, #f43f5e);
+    animation: recordPulse 1.5s infinite;
+  }
+  .mic-btn.paused {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    animation: none;
+  }
+  @keyframes recordPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+  }
+  .controls {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+  }
+  .ctrl-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(71, 85, 105, 0.6);
+    color: #e2e8f0;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    background: rgba(100, 116, 139, 0.8);
+    transform: scale(1.05);
+  }
+  .ctrl-btn:active:not(:disabled) { transform: scale(0.95); }
+  .ctrl-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 300px;
+  }
+  @media (max-width: 640px) {
+    .panels { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .panel-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .panel-text {
+    flex: 1;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #f1f5f9;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .panel-text.muted { color: #64748b; font-style: italic; }
+  .log {
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+  .error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+  .error.show { display: block; }
+  .hint {
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>实时翻译</h1>
+  <div class="subtitle">GPT Realtime · 中 ↔ 英</div>
+</header>
+
+<div class="container">
+  <div class="settings">
+    <input type="password" id="apiKey" placeholder="OpenAI API Key (sk-...)" autocomplete="off">
+    <select id="voice">
+      <option value="alloy">Alloy</option>
+      <option value="ash">Ash</option>
+      <option value="ballad">Ballad</option>
+      <option value="coral">Coral</option>
+      <option value="echo">Echo</option>
+      <option value="sage">Sage</option>
+      <option value="shimmer">Shimmer</option>
+      <option value="verse" selected>Verse</option>
+    </select>
+    <div class="status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">未连接</span>
+    </div>
+  </div>
+
+  <div class="error" id="errorBox"></div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="pauseBtn" title="暂停 / 恢复" disabled>⏸</button>
+    <button class="mic-btn" id="micBtn" disabled>🎤</button>
+    <button class="ctrl-btn" id="stopBtn" title="停止" disabled>⏹</button>
+  </div>
+  <div class="log" id="log">填入 API Key 后点击麦克风开始</div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-label">📥 原文 (Source)</div>
+      <div class="panel-text muted" id="sourceText">等待语音输入...</div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">📤 译文 (Translation)</div>
+      <div class="panel-text muted" id="targetText">Waiting for translation...</div>
+    </div>
+  </div>
+  <div class="hint">提示: API Key 仅存于本地浏览器 (localStorage), 不会上传到任何第三方</div>
+</div>
+
+<audio id="remoteAudio" autoplay></audio>
+
+<script>
+const MODEL = "gpt-realtime";
+const SYSTEM_INSTRUCTIONS = `You are a real-time bidirectional translator between Chinese and English.
+
+Rules:
+- If the user speaks Chinese, translate to natural English.
+- If the user speaks English, translate to natural Mandarin Chinese.
+- Output ONLY the translation. Do not add explanations, greetings, or commentary.
+- Preserve tone, register, and intent.
+- Keep pace with the speaker; produce translation as soon as possible.
+- For ambiguous short utterances, translate literally.`;
+
+const els = {
+  apiKey: document.getElementById('apiKey'),
+  voice: document.getElementById('voice'),
+  micBtn: document.getElementById('micBtn'),
+  pauseBtn: document.getElementById('pauseBtn'),
+  stopBtn: document.getElementById('stopBtn'),
+  statusDot: document.getElementById('statusDot'),
+  statusText: document.getElementById('statusText'),
+  sourceText: document.getElementById('sourceText'),
+  targetText: document.getElementById('targetText'),
+  log: document.getElementById('log'),
+  errorBox: document.getElementById('errorBox'),
+  remoteAudio: document.getElementById('remoteAudio'),
+};
+
+let pc = null;
+let dc = null;
+let localStream = null;
+let isRecording = false;
+let isPaused = false;
+let currentSourceItem = null;
+let currentTargetItem = null;
+
+// Restore key
+const savedKey = localStorage.getItem('openai_api_key');
+if (savedKey) els.apiKey.value = savedKey;
+const savedVoice = localStorage.getItem('voice') || 'verse';
+els.voice.value = savedVoice;
+
+els.apiKey.addEventListener('change', () => {
+  localStorage.setItem('openai_api_key', els.apiKey.value.trim());
+  updateMicBtn();
+});
+els.apiKey.addEventListener('input', updateMicBtn);
+els.voice.addEventListener('change', () => {
+  localStorage.setItem('voice', els.voice.value);
+});
+
+function updateMicBtn() {
+  els.micBtn.disabled = !els.apiKey.value.trim();
+}
+updateMicBtn();
+
+function updateControls() {
+  els.pauseBtn.disabled = !isRecording;
+  els.stopBtn.disabled = !isRecording;
+  els.pauseBtn.textContent = isPaused ? '▶' : '⏸';
+  els.pauseBtn.title = isPaused ? '恢复' : '暂停';
+}
+
+function setStatus(state, text) {
+  els.statusDot.className = 'status-dot ' + state;
+  els.statusText.textContent = text;
+}
+
+function showError(msg) {
+  els.errorBox.textContent = msg;
+  els.errorBox.classList.add('show');
+  setTimeout(() => els.errorBox.classList.remove('show'), 8000);
+}
+
+function logLine(msg) { els.log.textContent = msg; }
+
+els.micBtn.addEventListener('click', async () => {
+  if (isRecording) {
+    togglePause();
+  } else {
+    await start();
+  }
+});
+
+els.pauseBtn.addEventListener('click', togglePause);
+els.stopBtn.addEventListener('click', stop);
+
+function togglePause() {
+  if (!isRecording || !localStream) return;
+  isPaused = !isPaused;
+  localStream.getAudioTracks().forEach(t => t.enabled = !isPaused);
+
+  if (isPaused) {
+    els.micBtn.classList.remove('recording');
+    els.micBtn.classList.add('paused');
+    els.micBtn.textContent = '⏸';
+    setStatus('connecting', '已暂停');
+    logLine('麦克风静音, 点击恢复');
+  } else {
+    els.micBtn.classList.remove('paused');
+    els.micBtn.classList.add('recording');
+    els.micBtn.textContent = '🎤';
+    setStatus('connected', '已连接');
+    logLine('恢复, 继续说话...');
+  }
+  updateControls();
+}
+
+async function start() {
+  const key = els.apiKey.value.trim();
+  if (!key) return showError('请先填入 API Key');
+  localStorage.setItem('openai_api_key', key);
+
+  try {
+    setStatus('connecting', '连接中...');
+    logLine('请求麦克风权限...');
+
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+
+    logLine('创建 WebRTC 连接...');
+    pc = new RTCPeerConnection();
+
+    pc.ontrack = (e) => {
+      els.remoteAudio.srcObject = e.streams[0];
+    };
+
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+    dc = pc.createDataChannel('oai-events');
+    dc.addEventListener('open', onDcOpen);
+    dc.addEventListener('message', onDcMessage);
+    dc.addEventListener('close', () => {
+      setStatus('', '已断开');
+    });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    logLine('握手中...');
+    const resp = await fetch(`https://api.openai.com/v1/realtime?model=${MODEL}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/sdp',
+        'OpenAI-Beta': 'realtime=v1',
+      },
+      body: offer.sdp,
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`SDP 交换失败 (${resp.status}): ${errText}`);
+    }
+
+    const answerSdp = await resp.text();
+    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+
+    isRecording = true;
+    isPaused = false;
+    els.micBtn.classList.add('recording');
+    els.micBtn.textContent = '🎤';
+    setStatus('connected', '已连接');
+    logLine('开始说话, 自动翻译中...');
+    els.sourceText.classList.remove('muted');
+    els.targetText.classList.remove('muted');
+    els.sourceText.textContent = '';
+    els.targetText.textContent = '';
+    updateControls();
+  } catch (err) {
+    console.error(err);
+    showError(err.message);
+    setStatus('error', '错误');
+    logLine('连接失败');
+    await stop();
+  }
+}
+
+function onDcOpen() {
+  const sessionUpdate = {
+    type: 'session.update',
+    session: {
+      modalities: ['audio', 'text'],
+      instructions: SYSTEM_INSTRUCTIONS,
+      voice: els.voice.value,
+      input_audio_format: 'pcm16',
+      output_audio_format: 'pcm16',
+      input_audio_transcription: { model: 'whisper-1' },
+      turn_detection: {
+        type: 'server_vad',
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 500,
+        create_response: true,
+      },
+      temperature: 0.6,
+    },
+  };
+  dc.send(JSON.stringify(sessionUpdate));
+}
+
+function onDcMessage(e) {
+  let evt;
+  try { evt = JSON.parse(e.data); } catch { return; }
+
+  switch (evt.type) {
+    case 'conversation.item.input_audio_transcription.delta':
+      appendSource(evt.delta || '');
+      break;
+    case 'conversation.item.input_audio_transcription.completed':
+      if (evt.transcript) replaceSource(evt.transcript);
+      finalizeSource();
+      break;
+    case 'response.audio_transcript.delta':
+      appendTarget(evt.delta || '');
+      break;
+    case 'response.audio_transcript.done':
+      if (evt.transcript) replaceTarget(evt.transcript);
+      finalizeTarget();
+      break;
+    case 'response.created':
+      currentTargetItem = '';
+      break;
+    case 'input_audio_buffer.speech_started':
+      logLine('🎙️ 检测到语音...');
+      currentSourceItem = '';
+      break;
+    case 'input_audio_buffer.speech_stopped':
+      logLine('翻译中...');
+      break;
+    case 'error':
+      showError(`API 错误: ${evt.error?.message || JSON.stringify(evt.error)}`);
+      break;
+  }
+}
+
+function appendSource(delta) {
+  if (currentSourceItem === null) currentSourceItem = '';
+  currentSourceItem += delta;
+  renderSource();
+}
+function replaceSource(text) {
+  currentSourceItem = text;
+  renderSource();
+}
+function renderSource() {
+  els.sourceText.textContent = currentSourceItem || '...';
+}
+function finalizeSource() {
+  if (currentSourceItem) {
+    els.sourceText.textContent = currentSourceItem;
+  }
+  currentSourceItem = null;
+}
+
+function appendTarget(delta) {
+  if (currentTargetItem === null) currentTargetItem = '';
+  currentTargetItem += delta;
+  renderTarget();
+}
+function replaceTarget(text) {
+  currentTargetItem = text;
+  renderTarget();
+}
+function renderTarget() {
+  els.targetText.textContent = currentTargetItem || '...';
+}
+function finalizeTarget() {
+  if (currentTargetItem) {
+    els.targetText.textContent = currentTargetItem;
+  }
+  currentTargetItem = null;
+  logLine('继续说话...');
+}
+
+async function stop() {
+  isRecording = false;
+  isPaused = false;
+  els.micBtn.classList.remove('recording', 'paused');
+  els.micBtn.textContent = '🎤';
+  if (dc) { try { dc.close(); } catch {} dc = null; }
+  if (pc) { try { pc.close(); } catch {} pc = null; }
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  setStatus('', '未连接');
+  logLine('已停止');
+  updateControls();
+}
+
+window.addEventListener('beforeunload', stop);
+</script>
+</body>
+</html>
